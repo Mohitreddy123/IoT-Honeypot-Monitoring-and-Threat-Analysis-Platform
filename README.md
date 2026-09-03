@@ -1,24 +1,35 @@
 # IoT Honeypot Monitoring and Threat Analysis Platform
 
-Production-quality academic defensive-security project that combines ESP32 telemetry, a Flask monitoring backend, SQLite storage, Socket.IO real-time updates, and Cowrie SSH honeypot activity in one dashboard.
+Production-quality academic defensive-security project that combines ESP32 telemetry, a Flask monitoring backend, SQLite storage, Socket.IO real-time updates, and Cowrie SSH honeypot activity in one centralized dashboard.
 
-## Architecture
+![System Setup](assets/system-setup.png)
+
+---
+
+## 🏗️ Architecture
 
 ```text
-ESP32 Device -> HTTP POST -> Flask API -> SQLite Database -> Dashboard
-Cowrie Honeypot -> cowrie.json -> Cowrie Parser -> Flask API -> Database -> Dashboard
+ESP32 Device      ──( HTTP POST )──> Flask API ──> SQLite DB ──> Web Dashboard
+Cowrie Honeypot   ──( cowrie.json )─> Parser    ──> Flask API ──> SQLite DB ──> Web Dashboard
 ```
 
-## Folder Structure
+| Communication Flow | Threat Analysis Flow |
+| :---: | :---: |
+| ![Sequence Diagram](assets/sequence-diagram.png) | ![Workflow Diagram](assets/workflow-diagram.png) |
+
+---
+
+## 📁 Repository Structure
 
 ```text
-iot_honeypot/
+IoT-Honeypot-Monitoring-and-Threat-Analysis-Platform/
 ├── app.py
 ├── config.py
 ├── database.py
 ├── models.py
 ├── requirements.txt
 ├── README.md
+├── assets/
 ├── routes/
 │   ├── api.py
 │   └── dashboard.py
@@ -29,96 +40,135 @@ iot_honeypot/
 ├── parser/
 │   └── cowrie_parser.py
 ├── templates/
+│   └── dashboard.html
 ├── static/
+│   ├── css/dashboard.css
+│   └── js/dashboard.js
 ├── logs/
 └── migrations/
 ```
 
-## Windows 11 Setup
+---
 
-Install Python 3.12 or newer from `python.org`, then open PowerShell:
+## 📊 Live Monitoring Dashboard
 
+![Platform Dashboard](assets/dashboard.png)
+
+The central dashboard aggregates real-time event logs, visualizes attack vectors by severity and type, and monitors client heartbeats without requiring manual browser refreshes.
+
+### Real-Time Cowrie Attack Feed
+Captures unauthorized logins, command execution, and client fingerprints in real time:
+
+![Cowrie Activity Feed](assets/cowrie-activity.png)
+
+---
+
+## 💻 Windows Setup & Installation
+
+### 1. Environment Configuration
 ```powershell
-cd D:\project\iot-honeypot\iot_honeypot
-py -3.12 -m venv .venv
+# Create and activate virtual environment
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+
+# Install project dependencies
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+```
+
+### 2. Set Environment Variables
+```powershell
 $env:SECRET_KEY = "replace-with-a-long-random-secret"
+$env:DATABASE_URL = "sqlite:///instance/iot_honeypot.db"
+```
+
+### 3. Initialize DB and Run
+```powershell
 flask --app app init-db
 python app.py
 ```
 
-Open `http://127.0.0.1:5000`.
+Access the interface at: `http://127.0.0.1:5000`
 
-## Environment Variables
+---
+
+## ⚙️ Environment Variables
 
 | Variable | Description | Default |
-| --- | --- | --- |
-| `SECRET_KEY` | Flask and CSRF signing key | development fallback |
+| :--- | :--- | :--- |
+| `SECRET_KEY` | Flask and CSRF signing key | Development fallback |
 | `DATABASE_URL` | SQLAlchemy database URI | `sqlite:///instance/iot_honeypot.db` |
-| `LOG_LEVEL` | Application log level | `INFO` |
-| `COWRIE_LOG_PATH` | Default Cowrie JSON path | `logs/cowrie.json` |
-| `SOCKETIO_ASYNC_MODE` | Socket.IO backend | `threading` |
-| `FLASK_DEBUG` | Set `1` to enable Flask debug mode | `0` |
+| `LOG_LEVEL` | Application logging verbosity | `INFO` |
+| `COWRIE_LOG_PATH` | Default Cowrie JSON log path | `logs/cowrie.json` |
+| `SOCKETIO_ASYNC_MODE`| Socket.IO asynchronous runtime | `threading` |
+| `FLASK_DEBUG` | Enable debug mode (1) or production (0) | `0` |
 
-## API Endpoints
+---
+
+## 📡 REST API Endpoints
 
 | Method | Endpoint | Purpose |
-| --- | --- | --- |
+| :--- | :--- | :--- |
 | `GET` | `/` | Real-time Bootstrap dashboard |
-| `GET` | `/health` | Service health check |
+| `GET` | `/health` | Service health check endpoint |
 | `POST` | `/api/device` | Register or update an ESP32 device |
-| `GET` | `/api/device` | List devices |
+| `GET` | `/api/device` | List registered devices |
 | `GET` | `/api/devices` | Compatibility alias for listing devices |
-| `POST` | `/api/log` | Store ESP32 telemetry |
-| `GET` | `/api/logs` | List telemetry; supports `source_ip`, `device_name`, `event_type` |
-| `POST` | `/api/cowrie` | Store Cowrie JSON event, or parse a local file with `log_path` |
-| `GET` | `/api/cowrie` | List Cowrie events; supports `source_ip` |
+| `POST` | `/api/log` | Store ESP32 telemetry event |
+| `GET` | `/api/logs` | List telemetry (filters: `source_ip`, `device_name`, `event_type`) |
+| `POST` | `/api/cowrie` | Store Cowrie JSON event or parse file via `log_path` |
+| `GET` | `/api/cowrie` | List Cowrie events (filter: `source_ip`) |
 | `GET` | `/api/stats` | Dashboard counters and chart data |
 
-All JSON endpoints validate input, return JSON responses, and use appropriate HTTP status codes.
+---
 
-## ESP32 Telemetry Tests
+## 🔌 ESP32 Hardware Setup
 
-Boot event:
+![ESP32 Node](assets/esp32-node.png)
 
+### Board Configuration
+1. Open **Arduino IDE** and add the ESP32 board URL to Preferences:
+   ```text
+   [https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json](https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json)
+   ```
+2. Install **esp32** from Boards Manager.
+3. Open `esp32/esp32_honeypot.ino`.
+4. Configure credentials:
+   ```cpp
+   const char* WIFI_SSID = "YOUR_WIFI_SSID";
+   const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+   const char* SERVER_BASE_URL = "http://YOUR_SERVER_IP:5000";
+   ```
+5. Select **ESP32 Dev Module** or **DOIT ESP32 DEVKIT V1** and flash the firmware.
+6. Open the Serial Monitor at baud rate `115200`.
+
+### Manual Telemetry Testing (PowerShell)
+
+**Boot Event:**
 ```powershell
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5000/api/log `
+Invoke-RestMethod -Method Post -Uri [http://127.0.0.1:5000/api/log](http://127.0.0.1:5000/api/log) `
   -ContentType "application/json" `
   -Body '{"device_name":"ESP32_DEVKIT","event_type":"boot","severity":"info","payload":"device started"}'
 ```
 
-Heartbeat event:
-
+**Heartbeat Event:**
 ```powershell
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5000/api/log `
+Invoke-RestMethod -Method Post -Uri [http://127.0.0.1:5000/api/log](http://127.0.0.1:5000/api/log) `
   -ContentType "application/json" `
   -Body '{"device_name":"ESP32_DEVKIT","event_type":"heartbeat","temperature":28,"humidity":70}'
 ```
 
-## ESP32 Setup
+---
 
-1. Install Arduino IDE.
-2. Add the ESP32 board package URL in Arduino IDE preferences:
-   `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
-3. Install `esp32` from Boards Manager.
-4. Open `esp32/esp32_honeypot.ino`.
-5. Set `WIFI_SSID`, `WIFI_PASSWORD`, and `SERVER_BASE_URL`.
-6. Select `ESP32 Dev Module` or `DOIT ESP32 DEVKIT V1`.
-7. Upload and open Serial Monitor at `115200`.
+## 🍯 Kali Cowrie Honeypot Integration
 
-The sketch uses `WiFi.h` and `HTTPClient.h`, registers the device at `/api/device`, sends a boot event, and posts heartbeat telemetry to `/api/log`.
-
-## Kali Cowrie Setup
-
-Install and run Cowrie on the Kali VM:
-
+### 1. Installation on Kali Linux
 ```bash
 sudo apt update
 sudo apt install git python3-venv python3-pip authbind -y
-git clone https://github.com/cowrie/cowrie.git
+git clone [https://github.com/cowrie/cowrie.git](https://github.com/cowrie/cowrie.git)
 cd cowrie
+
 python3 -m venv cowrie-env
 source cowrie-env/bin/activate
 pip install --upgrade pip
@@ -127,14 +177,8 @@ cp etc/cowrie.cfg.dist etc/cowrie.cfg
 bin/cowrie start
 ```
 
-Cowrie JSON logs are usually written under:
-
-```text
-cowrie/var/log/cowrie/cowrie.json
-```
-
-Forward logs to the Windows Flask host:
-
+### 2. Forward Cowrie Logs to Flask Host
+Continuous streaming:
 ```bash
 python3 cowrie_parser.py \
   --log /home/kali/cowrie/var/log/cowrie/cowrie.json \
@@ -142,8 +186,7 @@ python3 cowrie_parser.py \
   --follow
 ```
 
-For one-time forwarding from the start of the file:
-
+One-time sync from beginning of the file:
 ```bash
 python3 cowrie_parser.py \
   --log /home/kali/cowrie/var/log/cowrie/cowrie.json \
@@ -151,41 +194,29 @@ python3 cowrie_parser.py \
   --from-start
 ```
 
-## Cowrie API Test
-
+### 3. Cowrie API Test (PowerShell)
 ```powershell
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5000/api/cowrie `
+Invoke-RestMethod -Method Post -Uri [http://127.0.0.1:5000/api/cowrie](http://127.0.0.1:5000/api/cowrie) `
   -ContentType "application/json" `
   -Body '{"timestamp":"2026-05-30T10:00:00Z","src_ip":"192.0.2.44","username":"root","eventid":"cowrie.login.failed"}'
 ```
 
-## Dashboard Verification
+---
 
-1. Open `http://127.0.0.1:5000`.
-2. Send the ESP32 boot and heartbeat examples.
-3. Send the Cowrie API test.
-4. Confirm the overview counters update.
-5. Confirm new ESP32 and Cowrie rows appear without refreshing.
-6. Use the search fields to filter by IP, device, and event type.
+## 📂 Source Code Layout & Responsibilities
 
-## Security Implementation
-
-The platform uses SQLAlchemy ORM, structured input validation, environment variables, Flask-WTF CSRF protection for browser-facing routes, CSRF exemption for machine-to-machine JSON APIs, rotating application logs, generic server errors, and strict JSON parsing. Do not expose the Flask development server directly to the internet; use a firewall or reverse proxy in shared lab networks.
-
-## File Responsibilities
-
-| File | Responsibility |
-| --- | --- |
-| `app.py` | Application factory, extension wiring, logging, CLI database initialization |
-| `config.py` | Environment-driven settings |
-| `database.py` | SQLAlchemy, Socket.IO, and CSRF extension objects |
-| `models.py` | `Device`, `Event`, and `CowrieEvent` schema |
-| `routes/api.py` | REST API endpoints and Socket.IO broadcasts |
-| `routes/dashboard.py` | Dashboard and health routes |
-| `services/validation.py` | JSON, IP, severity, timestamp, and status validation |
-| `services/telemetry.py` | ESP32 event/device persistence, filters, and dashboard statistics |
-| `services/cowrie_service.py` | Cowrie persistence and duplicate detection |
-| `parser/cowrie_parser.py` | Cowrie JSON parser and continuous API forwarder |
-| `templates/dashboard.html` | Bootstrap dashboard |
-| `static/css/dashboard.css` | Dashboard styling |
-| `static/js/dashboard.js` | Socket.IO, charts, and search filtering |
+| File | Component Responsibility |
+| :--- | :--- |
+| `app.py` | Application factory, extension registration, logging, and database CLI commands |
+| `config.py` | Environment variable parsing and application configuration profiles |
+| `database.py` | SQLAlchemy ORM, Flask-SocketIO, and Flask-WTF CSRF initialization |
+| `models.py` | Database schemas (`Device`, `Event`, `CowrieEvent`) |
+| `routes/api.py` | REST API endpoints, JSON ingestion, and Socket.IO real-time broadcasts |
+| `routes/dashboard.py` | Web UI template routes and health check handlers |
+| `services/validation.py` | Strict payload validation for IP addresses, severity, timestamps, and schema types |
+| `services/telemetry.py` | ESP32 persistence, filtering logic, and summary metric calculations |
+| `services/cowrie_service.py` | Cowrie event deduplication and persistence logic |
+| `parser/cowrie_parser.py` | Cowrie JSON log parsing and continuous streaming client |
+| `templates/dashboard.html` | Real-time monitoring dashboard UI |
+| `static/css/dashboard.css` | UI styles, responsive layouts, and dark theme design |
+| `static/js/dashboard.js` | Socket.IO event listeners, dynamic Chart.js rendering, and live log search |
