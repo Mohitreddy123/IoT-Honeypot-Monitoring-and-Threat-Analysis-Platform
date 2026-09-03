@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Honeypot Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🍯 IoT Honeypot Dashboard</h1>
+                <p class="subtitle">Real-time IoT Security Monitoring</p>
+            </div>
+            <div class="header-info">
+                <span id="server-time">--:--:--</span>
+                <span id="server-status" class="status-indicator">●</span>
+            </div>
+        </header>
+
+        <!-- Statistics Cards -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-events">0</div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="active-devices">0</div>
+                    <div class="stat-label">Active Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-attacks">0</div>
+                    <div class="stat-label">Attack Attempts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="threat-level">LOW</div>
+                    <div class="stat-label">Overall Threat</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <div class="content-wrapper">
+            <!-- Devices Panel -->
+            <section class="panel devices-panel">
+                <div class="panel-header">
+                    <h2>Connected Devices</h2>
+                    <button class="refresh-btn" onclick="refreshDevices()">⟳ Refresh</button>
+                </div>
+                <div class="devices-table-wrapper">
+                    <table id="devices-table" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Device ID</th>
+                                <th>IP Address</th>
+                                <th>Status</th>
+                                <th>First Seen</th>
+                                <th>Last Seen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="devices-tbody">
+                            <tr><td colspan="5" class="empty-state">Loading devices...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Events Panel -->
+            <section class="panel events-panel">
+                <div class="panel-header">
+                    <h2>Recent Events</h2>
+                    <div class="filter-group">
+                        <select id="event-filter" onchange="filterEvents(this.value)">
+                            <option value="">All Events</option>
+                            <option value="telemetry">Telemetry</option>
+                            <option value="attack">Attack</option>
+                        </select>
+                        <button class="refresh-btn" onclick="refreshEvents()">⟳ Refresh</button>
+                    </div>
+                </div>
+                <div class="events-table-wrapper">
+                    <table id="events-table" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Device ID</th>
+                                <th>Type</th>
+                                <th>Source IP</th>
+                                <th>Threat Level</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="events-tbody">
+                            <tr><td colspan="6" class="empty-state">Loading events...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Threat Distribution Panel -->
+            <section class="panel threat-panel">
+                <div class="panel-header">
+                    <h2>Threat Distribution</h2>
+                </div>
+                <div id="threat-chart" class="threat-chart">
+                    <div class="threat-bar">
+                        <span class="threat-label">Critical</span>
+                        <div class="threat-bar-fill critical" id="threat-critical" style="width: 0%"></div>
+                    </div>
+                    <div class="threat-bar">
+                        <span class="threat-label">High</span>
+                        <div class="threat-bar-fill high" id="threat-high" style="width: 0%"></div>
+                    </div>
+                    <div class="threat-bar">
+                        <span class="threat-label">Medium</span>
+                        <div class="threat-bar-fill medium" id="threat-medium" style="width: 0%"></div>
+                    </div>
+                    <div class="threat-bar">
+                        <span class="threat-label">Low</span>
+                        <div class="threat-bar-fill low" id="threat-low" style="width: 0%"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>IoT Honeypot v1.0 | Last updated: <span id="last-update">--</span></p>
+        </footer>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h2>Event Details</h2>
+            <pre id="detail-content"></pre>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

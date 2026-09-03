@@ -1,0 +1,3 @@
+{"event_type": "telemetry", "device_id": "ESP32_001", "timestamp": "2024-05-05T10:00:00", "source_ip": "192.168.1.100", "data": {"temperature": 28.5, "motion_detected": false, "signal_strength": -45, "uptime": 3600}}
+{"event_type": "telemetry", "device_id": "ESP32_002", "timestamp": "2024-05-05T10:01:00", "source_ip": "192.168.1.101", "data": {"temperature": 31.2, "motion_detected": true, "signal_strength": -52, "uptime": 7200}}
+{"event_type": "attack", "attack_type": "port_scan", "timestamp": "2024-05-05T10:02:00", "source_ip": "203.0.113.42", "target_port": 22, "payload": "SSH version probe"}
